@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"schedule-app/internal/models"
-	"sync"
 	"sort"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -81,22 +82,22 @@ func (s *Storage) GetByID(id string) (*models.Event, error) {
 func (s *Storage) GetByDate(date time.Time) ([]*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var events []*models.Event
 	year, month, day := date.Date()
-	
+
 	for _, event := range s.events {
 		eventYear, eventMonth, eventDay := event.StartTime.Date()
 		if year == eventYear && month == eventMonth && day == eventDay {
 			events = append(events, event)
 		}
 	}
-	
+
 	// Сортируем события по времени начала
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].StartTime.Before(events[j].StartTime)
 	})
-	
+
 	return events, nil
 }
 
@@ -209,31 +210,6 @@ func containsIgnoreCase(s, substr string) bool {
 		return true
 	}
 
-	// Простая реализация для демонстрации
-	// В реальном проекте можно использовать strings.Contains с приведением к нижнему регистру
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if substringMatch(s[i:i+len(substr)], substr) {
-			return true
-		}
-	}
-	return false
-}
-
-func substringMatch(s1, s2 string) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
-	for i := 0; i < len(s1); i++ {
-		if toLower(s1[i]) != toLower(s2[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-func toLower(b byte) byte {
-	if b >= 'A' && b <= 'Z' {
-		return b + ('a' - 'A')
-	}
-	return b
+	// Используем стандартную библиотеку для корректной работы с Unicode
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }

@@ -1,0 +1,66 @@
+<!-- static/views/tags-view.html -->
+<div class="tags-view">
+    <div class="view-header">
+        <h2><i class="fas fa-tags"></i> Управление тегами</h2>
+        <p>Создавайте и управляйте тегами для организации событий</p>
+    </div>
+    
+    <div class="form-container">
+        <div class="form-group">
+            <label>Новый тег</label>
+            <div class="tag-create-form">
+                <input type="text" id="newTagName" class="form-control" 
+                       placeholder="Название тега" style="flex: 1;">
+                <input type="color" id="newTagColor" value="#6a11cb" 
+                       title="Выберите цвет тега">
+                <button class="btn btn-primary" onclick="createTag()">
+                    <i class="fas fa-plus"></i> Добавить тег
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tags-grid" id="tagsGrid">
+        <div class="tag-card" onclick="filterByTag('работа')">
+            <div class="tag-color" style="background-color: #2196f3;"></div>
+            <div class="tag-name">работа</div>
+            <div class="tag-count">5 событий</div>
+        </div>
+        
+        <div class="tag-card" onclick="filterByTag('личное')">
+            <div class="tag-color" style="background-color: #4caf50;"></div>
+            <div class="tag-name">личное</div>
+            <div class="tag-count">3 события</div>
+        </div>
+        
+        <div class="tag-card" onclick="filterByTag('учеба')">
+            <div class="tag-color" style="background-color: #ff9800;"></div>
+            <div class="tag-name">учеба</div>
+            <div class="tag-count">7 событий</div>
+        </div>
+        
+        <div class="tag-card" onclick="filterByTag('важно')">
+            <div class="tag-color" style="background-color: #f44336;"></div>
+            <div class="tag-name">важно</div>
+            <div class="tag-count">4 события</div>
+        </div>
+        
+        <div class="tag-card" onclick="filterByTag('встреча')">
+            <div class="tag-color" style="background-color: #9c27b0;"></div>
+            <div class="tag-name">встреча</div>
+            <div class="tag-count">6 событий</div>
+        </div>
+        
+        <div class="tag-card" onclick="filterByTag('разработка')">
+            <div class="tag-color" style="background-color: #00bcd4;"></div>
+            <div class="tag-name">разработка</div>
+            <div class="tag-count">8 событий</div>
+        </div>
+    </div>
+    
+    <div class="empty-state" id="noTagsMessage" style="display: none;">
+        <i class="fas fa-tags"></i>
+        <h3>Тегов пока нет</h3>
+        <p>Создайте первый тег для организации ваших событий</p>
+    </div>
+</div>

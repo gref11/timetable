@@ -1,0 +1,85 @@
+<!-- static/views/search-view.html -->
+<div class="search-view">
+    <div class="view-header">
+        <h2><i class="fas fa-search"></i> Поиск событий</h2>
+        <p>Найдите события по названию, описанию или тегам</p>
+    </div>
+    
+    <div class="search-container">
+        <div class="search-input-container">
+            <input type="text" id="searchInput" class="form-control" 
+                   placeholder="Введите поисковый запрос..." 
+                   onkeypress="if(event.key === 'Enter') performSearch()">
+            <button class="btn btn-primary" onclick="performSearch()">
+                <i class="fas fa-search"></i> Найти
+            </button>
+        </div>
+        
+        <div class="search-filters">
+            <div class="filter-group">
+                <label>Дата начала:</label>
+                <input type="date" id="searchStartDate" class="form-control">
+            </div>
+            
+            <div class="filter-group">
+                <label>Дата окончания:</label>
+                <input type="date" id="searchEndDate" class="form-control">
+            </div>
+            
+            <div class="filter-group">
+                <label>Теги:</label>
+                <select id="searchTags" class="form-control" multiple style="height: 100px;">
+                    <option value="работа">работа</option>
+                    <option value="личное">личное</option>
+                    <option value="учеба">учеба</option>
+                    <option value="важно">важно</option>
+                    <option value="встреча">встреча</option>
+                </select>
+                <small>Удерживайте Ctrl для выбора нескольких тегов</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="search-results" id="searchResults">
+        <div class="result-item">
+            <div class="result-header">
+                <h3 class="result-title">Встреча с командой проекта</h3>
+                <span class="result-badge">Сегодня</span>
+            </div>
+            <div class="result-date">
+                <i class="far fa-clock"></i> 15 декабря 2025, 14:00 - 15:30
+            </div>
+            <p class="result-description">
+                Обсуждение текущего прогресса и планирование следующих задач
+            </p>
+            <div class="result-tags">
+                <span class="tag">работа</span>
+                <span class="tag">встреча</span>
+                <span class="tag">важно</span>
+            </div>
+        </div>
+        
+        <div class="result-item">
+            <div class="result-header">
+                <h3 class="result-title">Лекция по веб-разработке</h3>
+                <span class="result-badge">Завтра</span>
+            </div>
+            <div class="result-date">
+                <i class="far fa-clock"></i> 16 декабря 2025, 10:00 - 12:00
+            </div>
+            <p class="result-description">
+                Современные фреймворки и инструменты для фронтенд разработки
+            </p>
+            <div class="result-tags">
+                <span class="tag">учеба</span>
+                <span class="tag">разработка</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="no-results" id="noResultsMessage" style="display: none;">
+        <i class="fas fa-search"></i>
+        <h3>Ничего не найдено</h3>
+        <p>Попробуйте изменить поисковый запрос или фильтры</p>
+    </div>
+</div>

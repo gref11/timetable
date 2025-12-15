@@ -1,0 +1,70 @@
+<!-- static/views/list-view.html -->
+<div class="list-view">
+    <div class="list-header">
+        <h2><i class="fas fa-list"></i> Все события</h2>
+        <div class="list-filters">
+            <select class="form-control" style="width: auto;">
+                <option>Все события</option>
+                <option>Только сегодня</option>
+                <option>Предстоящие</option>
+                <option>Прошедшие</option>
+            </select>
+            <button class="btn btn-outline" onclick="loadView('add')">
+                <i class="fas fa-plus"></i> Добавить
+            </button>
+        </div>
+    </div>
+    
+    <div class="events-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Дата и время</th>
+                    <th>Продолжительность</th>
+                    <th>Теги</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="eventsTableBody">
+                <!-- Строки событий будут вставлены здесь -->
+                <tr class="event-row">
+                    <td>
+                        <div class="event-title">Пример встречи</div>
+                        <div class="event-description">Описание встречи с командой</div>
+                    </td>
+                    <td>
+                        <div>15 дек. 2025</div>
+                        <div class="event-time">14:00 - 15:30</div>
+                    </td>
+                    <td>1 час 30 мин</td>
+                    <td>
+                        <div class="event-tags">
+                            <span class="tag">работа</span>
+                            <span class="tag">встреча</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="event-actions">
+                            <button class="btn btn-icon btn-outline" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-icon btn-outline" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="empty-state" id="emptyListMessage" style="display: none;">
+        <i class="fas fa-inbox"></i>
+        <h3>Событий пока нет</h3>
+        <p>Создайте первое событие, чтобы начать планирование</p>
+        <button class="btn btn-primary" onclick="loadView('add')">
+            <i class="fas fa-plus"></i> Создать событие
+        </button>
+    </div>
+</div>

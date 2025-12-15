@@ -1,3 +1,4 @@
+<!-- static/index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -5,59 +6,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписание - Личный планировщик</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/views.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+    // Временные заглушки для функций, которые будут реализованы в Этапе 4
+    function switchView(view) {
+        console.log('Переключение на вид:', view);
+        alert('Функция будет реализована в следующем этапе. Выбран вид: ' + view);
+    }
+    
+    function loadView(view) {
+        switchView(view);
+    }
+</script>
 </head>
 <body>
     <div class="container">
+        <!-- Шапка -->
         <header class="header">
-            <h1><i class="fas fa-calendar-alt"></i> Личное расписание</h1>
-            <p class="subtitle">Управляйте своими событиями и планами</p>
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-alt"></i> Личное расписание</h1>
+                <div class="header-controls">
+                    <div class="current-date" id="currentDate">
+                        <i class="fas fa-calendar-day"></i>
+                        <span id="dateDisplay">Загрузка даты...</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadView('add')">
+                        <i class="fas fa-plus"></i> Новое событие
+                    </button>
+                </div>
+            </div>
         </header>
 
+        <!-- Основное содержимое -->
         <main class="main-content">
-            <div class="app-status" id="appStatus">
-                <div class="loading-spinner"></div>
-                <p>Загрузка приложения...</p>
-            </div>
+            <!-- Боковое меню -->
+            <nav class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-view="day">
+                        <i class="fas fa-calendar-day"></i> 
+                        <span>День</span>
+                    </li>
+                    <li class="nav-item" data-view="week">
+                        <i class="fas fa-calendar-week"></i> 
+                        <span>Неделя</span>
+                    </li>
+                    <li class="nav-item" data-view="list">
+                        <i class="fas fa-list"></i> 
+                        <span>Все события</span>
+                    </li>
+                    <li class="nav-item" data-view="search">
+                        <i class="fas fa-search"></i> 
+                        <span>Поиск</span>
+                    </li>
+                    <li class="nav-separator"></li>
+                    <li class="nav-item" data-view="add">
+                        <i class="fas fa-plus-circle"></i> 
+                        <span>Создать событие</span>
+                    </li>
+                    <li class="nav-item" data-view="tags">
+                        <i class="fas fa-tags"></i> 
+                        <span>Управление тегами</span>
+                    </li>
+                </ul>
+                
+                <div class="sidebar-footer">
+                    <div class="stats">
+                        <div class="stat-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <span id="eventsCount">0</span> событий
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-tag"></i>
+                            <span id="tagsCount">0</span> тегов
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
-            <div class="content-wrapper" style="display: none;">
-                <nav class="sidebar">
-                    <ul class="nav-menu">
-                        <li class="nav-item active" data-view="day">
-                            <i class="fas fa-calendar-day"></i> День
-                        </li>
-                        <li class="nav-item" data-view="list">
-                            <i class="fas fa-list"></i> Все события
-                        </li>
-                        <li class="nav-item" data-view="add">
-                            <i class="fas fa-plus-circle"></i> Новое событие
-                        </li>
-                        <li class="nav-item" data-view="search">
-                            <i class="fas fa-search"></i> Поиск
-                        </li>
-                    </ul>
-                </nav>
 
-                <div class="content-area">
-                    <div id="viewContainer">
-                        <!-- Динамическое содержимое будет загружаться здесь -->
-                        <div class="welcome-message">
-                            <h2>Добро пожаловать в планировщик!</h2>
-                            <p>Выберите раздел в меню слева для начала работы.</p>
+            <!-- Область контента -->
+            <div class="content-area">
+                <!-- Состояние загрузки -->
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Загрузка данных...</p>
+                </div>
+
+                <!-- Контейнер для динамического контента -->
+                <div id="viewContainer" class="view-container">
+                    <!-- Начальный контент (заменяется JavaScript) -->
+                    <div class="welcome-view">
+                        <div class="welcome-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h2>Добро пожаловать в планировщик!</h2>
+                        <p>Выберите раздел в меню слева для начала работы.</p>
+                        <div class="quick-actions">
+                            <button class="btn btn-primary" data-view="add">
+                                <i class="fas fa-plus"></i> Создать первое событие
+                            </button>
+                            <button class="btn btn-outline" data-view="day">
+                                <i class="fas fa-calendar-day"></i> Посмотреть день
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
+        <!-- Подвал -->
         <footer class="footer">
-            <p>© 2025 Расписание v1.0 | Студенческий проект</p>
-            <p class="api-status" id="apiStatus">
-                <i class="fas fa-circle"></i> Проверка соединения...
-            </p>
+            <div class="footer-content">
+                <p>© 2025 Расписание v1.0 | Студенческий проект</p>
+                <div class="footer-status">
+                    <div class="status-indicator" id="apiStatus">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Проверка соединения...</span>
+                    </div>
+                    <div class="app-info">
+                        <span id="appVersion">v1.0.0</span>
+                        <span class="separator">•</span>
+                        <span id="lastSync">Не синхронизировано</span>
+                    </div>
+                </div>
+            </div>
         </footer>
     </div>
 
+    <!-- Модальные окна (скрыты по умолчанию) -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Подтверждение</h3>
+            <p id="modalMessage">Вы уверены?</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-danger" id="modalConfirmBtn">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="alertModal">
+        <div class="modal-content">
+            <h3 id="alertTitle">Уведомление</h3>
+            <p id="alertMessage"></p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем основной скрипт -->
     <script src="/js/app.js"></script>
 </body>
 </html>
