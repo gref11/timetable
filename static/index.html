@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание - Личный планировщик</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-calendar-alt"></i> Личное расписание</h1>
+            <p class="subtitle">Управляйте своими событиями и планами</p>
+        </header>
+
+        <main class="main-content">
+            <div class="app-status" id="appStatus">
+                <div class="loading-spinner"></div>
+                <p>Загрузка приложения...</p>
+            </div>
+
+            <div class="content-wrapper" style="display: none;">
+                <nav class="sidebar">
+                    <ul class="nav-menu">
+                        <li class="nav-item active" data-view="day">
+                            <i class="fas fa-calendar-day"></i> День
+                        </li>
+                        <li class="nav-item" data-view="list">
+                            <i class="fas fa-list"></i> Все события
+                        </li>
+                        <li class="nav-item" data-view="add">
+                            <i class="fas fa-plus-circle"></i> Новое событие
+                        </li>
+                        <li class="nav-item" data-view="search">
+                            <i class="fas fa-search"></i> Поиск
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="content-area">
+                    <div id="viewContainer">
+                        <!-- Динамическое содержимое будет загружаться здесь -->
+                        <div class="welcome-message">
+                            <h2>Добро пожаловать в планировщик!</h2>
+                            <p>Выберите раздел в меню слева для начала работы.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2025 Расписание v1.0 | Студенческий проект</p>
+            <p class="api-status" id="apiStatus">
+                <i class="fas fa-circle"></i> Проверка соединения...
+            </p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

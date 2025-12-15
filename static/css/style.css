@@ -1,0 +1,183 @@
+/* Основные стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f7fa;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Шапка */
+.header {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    border-radius: 0 0 15px 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Основное содержимое */
+.main-content {
+    display: flex;
+    flex: 1;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Боковое меню */
+.sidebar {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.nav-menu {
+    list-style: none;
+}
+
+.nav-item {
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background-color: #f0f5ff;
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-left: 4px solid #1976d2;
+}
+
+.nav-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Область контента */
+.content-area {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #666;
+}
+
+.welcome-message h2 {
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+/* Статус приложения */
+.app-status {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Подвал */
+.footer {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: #666;
+    border-top: 1px solid #eee;
+    margin-top: auto;
+}
+
+.api-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.api-status i {
+    font-size: 0.8rem;
+}
+
+.api-status i.fa-circle {
+    color: #ff9800;
+}
+
+.api-status.connected i.fa-circle {
+    color: #4caf50;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        flex: none;
+        width: 100%;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+}
