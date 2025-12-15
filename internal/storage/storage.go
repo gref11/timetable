@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"schedule-app/internal/models"
 	"sync"
+	"sort"
 	"time"
 )
 
@@ -73,20 +74,29 @@ func (s *Storage) GetByID(id string) (*models.Event, error) {
 }
 
 // GetByDate возвращает события на определенную дату
+// internal/storage/storage.go
+// (добавляем после существующего кода)
+
+// GetByDate возвращает события на определенную дату (включая целый день)
 func (s *Storage) GetByDate(date time.Time) ([]*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
+	
 	var events []*models.Event
 	year, month, day := date.Date()
-
+	
 	for _, event := range s.events {
 		eventYear, eventMonth, eventDay := event.StartTime.Date()
 		if year == eventYear && month == eventMonth && day == eventDay {
 			events = append(events, event)
 		}
 	}
-
+	
+	// Сортируем события по времени начала
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].StartTime.Before(events[j].StartTime)
+	})
+	
 	return events, nil
 }
 

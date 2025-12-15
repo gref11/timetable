@@ -251,3 +251,108 @@ document.addEventListener('DOMContentLoaded', () => {
     logger.info('DOM загружен, запуск приложения...');
     initApp();
 });
+
+// ================== Тестовые функции для проверки API ==================
+
+// Тестирование CRUD операций через консоль
+window.scheduleAPI = {
+    // Получить все события
+    getAllEvents: async function() {
+        try {
+            const response = await fetch('/api/events');
+            const data = await response.json();
+            console.log('Все события:', data);
+            return data;
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    },
+    
+    // Создать тестовое событие
+    createTestEvent: async function() {
+        const now = new Date();
+        const event = {
+            title: 'Тестовое событие ' + now.toLocaleTimeString(),
+            startTime: now.toISOString(),
+            endTime: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(), // +2 часа
+            tags: ['тест', 'учеба']
+        };
+        
+        try {
+            const response = await fetch('/api/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(event)
+            });
+            
+            const data = await response.json();
+            console.log('Создано событие:', data);
+            return data;
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    },
+    
+    // Получить события на сегодня
+    getTodayEvents: async function() {
+        const today = new Date().toISOString().split('T')[0]; // Формат YYYY-MM-DD
+        
+        try {
+            const response = await fetch(`/api/events/date/${today}`);
+            const data = await response.json();
+            console.log(`События на ${today}:`, data);
+            return data;
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    },
+    
+    // Поиск событий
+    searchEvents: async function(query) {
+        try {
+            const response = await fetch(`/api/events/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            console.log(`Результаты поиска "${query}":`, data);
+            return data;
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    }
+};
+
+// Автоматическое тестирование при загрузке (только в режиме отладки)
+if (CONFIG.DEBUG) {
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Ждем немного, чтобы сервер успел запуститься
+        setTimeout(async () => {
+            console.log('=== Начинаем тестирование API ===');
+            
+            // Проверяем здоровье сервера
+            try {
+                const health = await fetch('/api/health').then(r => r.json());
+                console.log('Health check:', health);
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+            
+            // Создаем тестовое событие
+            const newEvent = await window.scheduleAPI.createTestEvent();
+            
+            if (newEvent && newEvent.event) {
+                // Получаем все события
+                await window.scheduleAPI.getAllEvents();
+                
+                // Получаем события на сегодня
+                await window.scheduleAPI.getTodayEvents();
+                
+                // Ищем событие
+                await window.scheduleAPI.searchEvents('Тестовое');
+                
+                console.log('=== Тестирование API завершено ===');
+                console.log('Для ручного тестирования используйте window.scheduleAPI в консоли');
+            }
+        }, 1000);
+    });
+}

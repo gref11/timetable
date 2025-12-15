@@ -1,0 +1,335 @@
+<!-- static/test-api.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование API Расписания</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .api-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .result {
+            margin-top: 10px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #388e3c;
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тестирование API Расписания</h1>
+        
+        <div class="api-section">
+            <h2>1. Проверка здоровья сервера</h2>
+            <button onclick="testHealth()">GET /api/health</button>
+            <div class="result" id="healthResult"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>2. Получить все события</h2>
+            <button onclick="getAllEvents()">GET /api/events</button>
+            <div class="result" id="allEventsResult"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>3. Создать событие</h2>
+            <div class="form-group">
+                <label>Название:</label>
+                <input type="text" id="eventTitle" value="Встреча с командой">
+            </div>
+            <div class="form-group">
+                <label>Время начала (YYYY-MM-DDTHH:MM):</label>
+                <input type="datetime-local" id="eventStart" value="2025-12-10T14:00">
+            </div>
+            <div class="form-group">
+                <label>Время окончания (YYYY-MM-DDTHH:MM):</label>
+                <input type="datetime-local" id="eventEnd" value="2025-12-10T15:30">
+            </div>
+            <div class="form-group">
+                <label>Теги (через запятую):</label>
+                <input type="text" id="eventTags" value="работа, встреча">
+            </div>
+            <button onclick="createNewEvent()">POST /api/events</button>
+            <div class="result" id="createResult"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>4. Получить события по дате</h2>
+            <div class="form-group">
+                <label>Дата (YYYY-MM-DD):</label>
+                <input type="date" id="searchDate" value="2025-12-10">
+            </div>
+            <button onclick="getEventsByDate()">GET /api/events/date/{date}</button>
+            <div class="result" id="dateResult"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>5. Поиск событий</h2>
+            <div class="form-group">
+                <label>Поисковый запрос:</label>
+                <input type="text" id="searchQuery" value="встреча">
+            </div>
+            <button onclick="searchEvents()">GET /api/events/search?q={query}</button>
+            <div class="result" id="searchResult"></div>
+        </div>
+        
+        <div class="api-section">
+            <h2>6. Примеры cURL команд</h2>
+            <pre><code>
+# Получить все события
+curl http://localhost:8080/api/events
+
+# Создать событие
+curl -X POST http://localhost:8080/api/events \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Лекция по программированию","startTime":"2025-12-10T10:00:00Z","endTime":"2025-12-10T11:30:00Z","tags":["учеба","программирование"]}'
+
+# Получить события на 10 декабря 2025
+curl http://localhost:8080/api/events/date/2025-12-10
+
+# Поиск событий
+curl http://localhost:8080/api/events/search?q=лекция
+            </code></pre>
+        </div>
+    </div>
+    
+    <script>
+        // Функция для форматирования JSON
+        function formatJSON(data) {
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (e) {
+                    return data;
+                }
+            }
+            return JSON.stringify(data, null, 2);
+        }
+        
+        // Функция для отображения результата
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const className = isError ? 'error' : 'success';
+            const title = isError ? 'Ошибка' : 'Успех';
+            
+            element.innerHTML = `
+                <div class="${className}">
+                    <strong>${title}:</strong>
+                    <pre>${formatJSON(data)}</pre>
+                </div>
+            `;
+        }
+        
+        // 1. Проверка здоровья сервера
+        async function testHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                showResult('healthResult', data);
+            } catch (error) {
+                showResult('healthResult', { error: error.message }, true);
+            }
+        }
+        
+        // 2. Получить все события
+        async function getAllEvents() {
+            try {
+                const response = await fetch('/api/events');
+                const data = await response.json();
+                showResult('allEventsResult', data);
+            } catch (error) {
+                showResult('allEventsResult', { error: error.message }, true);
+            }
+        }
+        
+        // 3. Создать событие (переименовано из createEvent)
+        async function createNewEvent() {
+            const title = document.getElementById('eventTitle').value;
+            const start = document.getElementById('eventStart').value;
+            const end = document.getElementById('eventEnd').value;
+            const tags = document.getElementById('eventTags').value
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0);
+            
+            if (!title) {
+                showResult('createResult', { error: 'Название события обязательно' }, true);
+                return;
+            }
+            
+            if (!start || !end) {
+                showResult('createResult', { error: 'Время начала и окончания обязательно' }, true);
+                return;
+            }
+            
+            // Преобразуем в ISO формат
+            const startTime = new Date(start).toISOString();
+            const endTime = new Date(end).toISOString();
+            
+            const eventData = {
+                title: title,
+                startTime: startTime,
+                endTime: endTime,
+                tags: tags
+            };
+            
+            console.log('Отправка данных:', eventData);
+            
+            try {
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showResult('createResult', data, true);
+                } else {
+                    showResult('createResult', data);
+                    
+                    // Очищаем форму после успешного создания
+                    document.getElementById('eventTitle').value = '';
+                    document.getElementById('eventTags').value = '';
+                    
+                    // Обновляем время на текущее
+                    const now = new Date();
+                    const future = new Date(now.getTime() + 60 * 60 * 1000); // +1 час
+                    document.getElementById('eventStart').value = now.toISOString().slice(0, 16);
+                    document.getElementById('eventEnd').value = future.toISOString().slice(0, 16);
+                }
+            } catch (error) {
+                showResult('createResult', { error: error.message }, true);
+            }
+        }
+        
+        // 4. Получить события по дате
+        async function getEventsByDate() {
+            const date = document.getElementById('searchDate').value;
+            
+            if (!date) {
+                showResult('dateResult', { error: 'Дата не указана' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/events/date/${date}`);
+                const data = await response.json();
+                showResult('dateResult', data);
+            } catch (error) {
+                showResult('dateResult', { error: error.message }, true);
+            }
+        }
+        
+        // 5. Поиск событий
+        async function searchEvents() {
+            const query = document.getElementById('searchQuery').value;
+            
+            if (!query) {
+                showResult('searchResult', { error: 'Поисковый запрос не может быть пустым' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/events/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                showResult('searchResult', data);
+            } catch (error) {
+                showResult('searchResult', { error: error.message }, true);
+            }
+        }
+        
+        // Автоматически заполняем сегодняшней датой
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('searchDate').value = today;
+            
+            // Устанавливаем время по умолчанию для создания события
+            const now = new Date();
+            const future = new Date(now.getTime() + 60 * 60 * 1000); // +1 час
+            
+            document.getElementById('eventStart').value = now.toISOString().slice(0, 16);
+            document.getElementById('eventEnd').value = future.toISOString().slice(0, 16);
+            
+            // Тестируем соединение при загрузке
+            testHealth();
+        });
+        
+        // Добавляем обработку Enter в полях формы
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (activeElement.id === 'eventTitle' || 
+                    activeElement.id === 'eventStart' || 
+                    activeElement.id === 'eventEnd' || 
+                    activeElement.id === 'eventTags') {
+                    createNewEvent();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
