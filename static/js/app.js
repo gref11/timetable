@@ -547,7 +547,7 @@ const AppState = {
     currentView: 'day',
     events: [],
     tags: [],
-    currentDate: new Date(),
+    currentDate: new Date(), // Используем локальную дату
     selectedEvent: null,
     isLoading: false,
     searchQuery: '',
@@ -595,7 +595,7 @@ const utils = {
     
     getTimeSlots: () => {
         const slots = [];
-        for (let hour = 8; hour <= 22; hour++) {
+        for (let hour = 0; hour < 24; hour++) {
             slots.push({
                 hour: hour,
                 label: `${hour.toString().padStart(2, '0')}:00`,
@@ -615,7 +615,94 @@ const utils = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    }
+    },
+
+    formatWeekRange: (date) => {
+        const weekStart = new Date(date);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1));
+        
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        return `${utils.formatDate(weekStart)} - ${utils.formatDate(weekEnd)}`;
+    },
+
+    getWeekNumber: (date) => {
+        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    },
+
+    getDayName: (date) => {
+        const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+        return days[date.getDay()];
+    },
+
+    getMonthShort: (date) => {
+        const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        return months[date.getMonth()];
+    },
+
+    getWeekDates: (date) => {
+        const weekStart = new Date(date);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1));
+        
+        const weekDays = [];
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(weekStart);
+            day.setDate(day.getDate() + i);
+            weekDays.push(day);
+        }
+        return weekDays;
+    },
+
+    isSameDay: (date1, date2) => {
+        return date1.getDate() === date2.getDate() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getFullYear() === date2.getFullYear();
+    },
+
+    formatEventTime: (startTime, endTime) => {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const duration = (end - start) / (1000 * 60 * 60); // в часах
+        
+        if (duration >= 1) {
+            const hours = Math.floor(duration);
+            const minutes = Math.round((duration - hours) * 60);
+            return `${utils.formatTime(start)}-${utils.formatTime(end)} (${hours}ч${minutes > 0 ? ` ${minutes}м` : ''})`;
+        } else {
+            const minutes = Math.round(duration * 60);
+            return `${utils.formatTime(start)}-${utils.formatTime(end)} (${minutes}м)`;
+        }
+    },
+
+    isShortEvent: (durationMinutes) => {
+        return durationMinutes < 30;
+    },
+
+    // Форматирование времени без секунд
+    formatTimeShort: (date) => {
+        return date.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    },
+
+    // Преобразование времени в минуты от начала дня
+    timeToMinutes: (date) => {
+        return date.getHours() * 60 + date.getMinutes();
+    },
+
+    // Преобразование минут в пиксели для дневного представления (1px = 1 минута)
+    minutesToPixelsDay: (minutes) => {
+        return minutes; // 1px на минуту
+    },
+
+    // Преобразование минут в пиксели для недельного представления (50px = 60 минут)
+    minutesToPixelsWeek: (minutes) => {
+        return minutes * (50 / 60); // 0.8333px на минуту
+    },
 };
 
 // ================== API МЕТОДЫ ==================
@@ -824,7 +911,43 @@ const stateManager = {
         if (AppState.currentView === 'day') {
             viewManager.renderDayView();
         }
-    }
+    },
+
+    // Изменить неделю
+    changeWeek: (weeks) => {
+        const newDate = new Date(AppState.currentDate);
+        newDate.setDate(newDate.getDate() + (weeks * 7));
+        AppState.currentDate = newDate;
+        
+        if (AppState.currentView === 'week') {
+            viewManager.renderWeekView();
+        }
+    },
+
+    // Установить текущую дату
+    setCurrentDate: (date, view = null) => {
+        AppState.currentDate = date;
+        stateManager.updateDateDisplay();
+        
+        if (view) {
+            viewManager.switchView(view);
+        } else if (AppState.currentView === 'day') {
+            viewManager.renderDayView();
+        } else if (AppState.currentView === 'week') {
+            viewManager.renderWeekView();
+        }
+    },
+
+    // Изменить неделю
+    changeWeek: (weeks) => {
+        const newDate = new Date(AppState.currentDate);
+        newDate.setDate(newDate.getDate() + (weeks * 7));
+        AppState.currentDate = newDate;
+        
+        if (AppState.currentView === 'week') {
+            viewManager.renderWeekView();
+        }
+    },
 };
 
 // ================== УПРАВЛЕНИЕ ПРЕДСТАВЛЕНИЯМИ ==================
@@ -852,6 +975,9 @@ const viewManager = {
             case 'day':
                 viewManager.renderDayView();
                 break;
+            case 'week':
+                viewManager.renderWeekView();
+                break;
             case 'list':
                 viewManager.renderListView();
                 break;
@@ -874,7 +1000,7 @@ const viewManager = {
     renderDayView: async () => {
         const container = document.getElementById('viewContainer');
         if (!container) return;
-        
+
         // Показать загрузку
         container.innerHTML = `
             <div class="loading-state">
@@ -882,7 +1008,7 @@ const viewManager = {
                 <p>Загрузка событий...</p>
             </div>
         `;
-        
+
         // Получить события на текущую дату
         const dayEvents = await api.getEventsByDate(AppState.currentDate);
         
@@ -891,31 +1017,24 @@ const viewManager = {
         
         // Определить, сегодня ли это
         const today = new Date();
-        const isToday = AppState.currentDate.toDateString() === today.toDateString();
-        const isYesterday = new Date(today.setDate(today.getDate() - 1)).toDateString() === AppState.currentDate.toDateString();
-        const isTomorrow = new Date(today.setDate(today.getDate() + 2)).toDateString() === AppState.currentDate.toDateString();
+        const isToday = utils.isSameDay(AppState.currentDate, today);
+        
+        // Вычисляем вчера и завтра
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const isYesterday = utils.isSameDay(AppState.currentDate, yesterday);
+        const isTomorrow = utils.isSameDay(AppState.currentDate, tomorrow);
         
         let daySubtitle = '';
         if (isToday) daySubtitle = 'Сегодня';
         else if (isYesterday) daySubtitle = 'Вчера';
         else if (isTomorrow) daySubtitle = 'Завтра';
         
-        // Создать временные слоты
+        // Создать временные слоты только для разметки
         const timeSlots = utils.getTimeSlots();
-        
-        // Распределить события по временным слотам
-        dayEvents.forEach(event => {
-            const startHour = new Date(event.startTime).getHours();
-            const endHour = new Date(event.endTime).getHours();
-            
-            // Найти подходящие слоты
-            for (let hour = startHour; hour <= endHour; hour++) {
-                const slot = timeSlots.find(s => s.hour === hour);
-                if (slot) {
-                    slot.events.push(event);
-                }
-            }
-        });
         
         // Отрисовать представление
         container.innerHTML = `
@@ -947,48 +1066,254 @@ const viewManager = {
                     </div>
                 ` : `
                     <div class="day-timeline" id="dayTimeline">
-                        ${timeSlots.map(slot => `
-                            <div class="time-slot">
-                                <div class="time-label">${slot.label}</div>
-                                <div class="time-content">
-                                    ${slot.events.map(event => {
-                                        const startTime = new Date(event.startTime);
-                                        const endTime = new Date(event.endTime);
-                                        const isCurrentHour = startTime.getHours() === slot.hour;
-                                        
-                                        if (isCurrentHour) {
-                                            const durationHours = (endTime - startTime) / (1000 * 60 * 60);
-                                            const height = Math.min(durationHours * 60, 60);
-                                            
-                                            return `
-                                                <div class="event-block" 
-                                                     style="height: ${height}px; top: ${startTime.getMinutes()}px;"
-                                                     onclick="eventManager.openEvent('${event.id}')">
-                                                    <div class="event-title">${event.title}</div>
-                                                    <div class="event-time">
-                                                        ${utils.formatTime(startTime)} - ${utils.formatTime(endTime)}
-                                                    </div>
-                                                    ${event.tags && event.tags.length > 0 ? `
-                                                        <div class="event-tags">
-                                                            ${event.tags.map(tag => `
-                                                                <span class="tag" style="background-color: ${stateManager.getTagColor(tag)}20; color: ${stateManager.getTagColor(tag)};">
-                                                                    ${tag}
-                                                                </span>
-                                                            `).join('')}
-                                                        </div>
-                                                    ` : ''}
-                                                </div>
-                                            `;
-                                        }
-                                        return '';
-                                    }).join('')}
+                        <!-- Сетка часов (только для разметки) -->
+                        ${timeSlots.map(slot => {
+                            const hour = slot.hour;
+                            const isNight = hour >= 0 && hour < 8 || hour >= 22;
+                            const currentHour = new Date().getHours();
+                            const isCurrentHour = hour === currentHour && isToday;
+                            
+                            return `
+                                <div class="time-slot ${isNight ? 'night-hour' : ''} ${isCurrentHour ? 'current-hour' : ''}">
+                                    <div class="time-label">${slot.label}</div>
+                                    <div class="time-content"></div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
+                        
+                        <!-- Абсолютно позиционированные события -->
+                        <div class="events-overlay">
+                            ${dayEvents.map(event => {
+                                const startTime = new Date(event.startTime);
+                                const endTime = new Date(event.endTime);
+                                
+                                // Рассчитываем позицию и высоту в пикселях
+                                // 60px на час = 1px на минуту
+                                const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+                                const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+                                const durationMinutes = endMinutes - startMinutes;
+                                
+                                const top = startMinutes; // в пикселях (1px = 1 минута)
+                                const height = Math.max(durationMinutes, 5); // минимальная высота 5px
+                                
+                                const isVeryShortEvent = height < 15;
+                                const isShortEvent = height < 30 && !isVeryShortEvent;
+                                
+                                if (isVeryShortEvent) {
+                                    // Для очень коротких событий показываем только иконку
+                                    return `
+                                        <div class="event-block very-short-event" 
+                                            style="top: ${top}px; height: ${height}px;"
+                                            title="${event.title} (${utils.formatTime(startTime)}-${utils.formatTime(endTime)})"
+                                            onclick="eventManager.showEventDetails('${event.id}', event)">
+                                            <div class="event-title">
+                                                <i class="fas fa-circle"></i>
+                                            </div>
+                                        </div>
+                                    `;
+                                } else {
+                                    return `
+                                        <div class="event-block ${isShortEvent ? 'short-event' : ''}" 
+                                            style="top: ${top}px; height: ${height}px;"
+                                            onclick="eventManager.showEventDetails('${event.id}', event)">
+                                            <div class="event-title">${event.title}</div>
+                                            ${!isShortEvent ? `
+                                                <div class="event-time">
+                                                    ${utils.formatTime(startTime)} - ${utils.formatTime(endTime)}
+                                                </div>
+                                            ` : ''}
+                                            ${event.tags && event.tags.length > 0 && !isShortEvent ? `
+                                                <div class="event-tags">
+                                                    ${event.tags.map(tag => `
+                                                        <span class="tag" style="background-color: ${stateManager.getTagColor(tag)}20; color: ${stateManager.getTagColor(tag)};">
+                                                            ${tag}
+                                                        </span>
+                                                    `).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                }
+                            }).join('')}
+                        </div>
                     </div>
                 `}
             </div>
         `;
+        
+        // Улучшаем отображение коротких событий
+        setTimeout(() => eventDisplayManager.enhanceEventDisplay(), 0);
+    },
+
+    // ===== ПРЕДСТАВЛЕНИЕ НЕДЕЛИ =====
+    renderWeekView: async () => {
+        const container = document.getElementById('viewContainer');
+        if (!container) return;
+
+        // Показать загрузку
+        container.innerHTML = `
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Загрузка событий...</p>
+            </div>
+        `;
+
+        // Получить даты недели
+        const weekDays = utils.getWeekDates(AppState.currentDate);
+        const weekStart = weekDays[0];
+        const weekEnd = weekDays[6];
+
+        // Получить события для всей недели
+        const weekEventsPromises = weekDays.map(day => api.getEventsByDate(day));
+        const weekEventsResults = await Promise.all(weekEventsPromises);
+        
+        // Распределить события по дням
+        const eventsByDay = weekDays.map((day, index) => ({
+            date: day,
+            events: weekEventsResults[index]
+        }));
+
+        // Отрисовать представление недели
+        container.innerHTML = `
+            <div class="week-view">
+                <div class="week-header">
+                    <div class="date-navigation">
+                        <button class="btn btn-outline" onclick="stateManager.changeWeek(-1)">
+                            <i class="fas fa-chevron-left"></i> Предыдущая неделя
+                        </button>
+                        
+                        <div class="date-display">
+                            <h2>${utils.formatWeekRange(AppState.currentDate)}</h2>
+                            <p>Неделя ${utils.getWeekNumber(weekStart)}</p>
+                        </div>
+                        
+                        <button class="btn btn-outline" onclick="stateManager.changeWeek(1)">
+                            Следующая неделя <i class="fas fa-chevron-right"></i>
+                        </button>
+                        
+                        <button class="btn btn-primary" onclick="viewManager.switchView('add')">
+                            <i class="fas fa-plus"></i> Добавить
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="week-grid">
+                    <div class="week-days-header">
+                        <div class="day-header empty"></div>
+                        ${weekDays.map((day, index) => {
+                            const isToday = utils.isSameDay(day, new Date());
+                            return `
+                                <div class="day-header ${isToday ? 'today' : ''}" 
+                                    onclick="stateManager.setCurrentDate(new Date('${day.toISOString()}'), 'day')"
+                                    style="cursor: pointer;">
+                                    <div class="day-name">${utils.getDayName(day)}</div>
+                                    <div class="day-date">${day.getDate()}</div>
+                                    <div class="day-month">${utils.getMonthShort(day)}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    <div class="week-hours">
+                        <div class="time-column">
+                            ${Array.from({length: 24}, (_, i) => `
+                                <div class="hour-label">${i.toString().padStart(2, '0')}:00</div>
+                            `).join('')}
+                        </div>
+                        
+                        ${weekDays.map((day, dayIndex) => {
+                            const dayEvents = eventsByDay[dayIndex].events.sort((a, b) => 
+                                new Date(a.startTime) - new Date(b.startTime)
+                            );
+                            
+                            return `
+                                <div class="day-column" data-day="${day.toISOString().split('T')[0]}">
+                                    <!-- Часовые ячейки (только для разметки) -->
+                                    ${Array.from({length: 24}, (_, hour) => `
+                                        <div class="hour-cell" data-hour="${hour}"></div>
+                                    `).join('')}
+                                    
+                                    <!-- Абсолютно позиционированные события -->
+                                    <div class="day-events-overlay">
+                                        ${dayEvents.map(event => {
+                                            const startTime = new Date(event.startTime);
+                                            const endTime = new Date(event.endTime);
+                                            
+                                            // Рассчитываем позицию и высоту в пикселях
+                                            // 50px на час = 0.833px на минуту
+                                            const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+                                            const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+                                            const durationMinutes = endMinutes - startMinutes;
+                                            
+                                            const top = startMinutes * 0.8333; // 50px / 60 минут = 0.8333px на минуту
+                                            const height = Math.max(durationMinutes * 0.8333, 15); // минимальная высота 15px
+                                            
+                                            const isVeryShortEvent = height < 15;
+                                            const isShortEvent = height < 30 && !isVeryShortEvent;
+                                            
+                                            if (isVeryShortEvent) {
+                                                // Для очень коротких событий показываем только иконку
+                                                return `
+                                                    <div class="week-event very-short-event" 
+                                                        style="top: ${top}px; height: ${height}px;"
+                                                        title="${event.title} (${utils.formatTime(startTime)}-${utils.formatTime(endTime)})"
+                                                        onclick="eventManager.showEventDetails('${event.id}', event)">
+                                                        <div class="week-event-title">
+                                                            <i class="fas fa-circle"></i>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            } else {
+                                                return `
+                                                    <div class="week-event ${isShortEvent ? 'short-event' : ''}" 
+                                                        style="top: ${top}px; height: ${height}px;"
+                                                        onclick="eventManager.showEventDetails('${event.id}', event)">
+                                                        <div class="week-event-title">${event.title}</div>
+                                                        ${!isShortEvent ? `
+                                                            <div class="week-event-time">
+                                                                ${utils.formatTime(startTime)}-${utils.formatTime(endTime)}
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                `;
+                                            }
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                ${eventsByDay.every(day => day.events.length === 0) ? `
+                    <div class="empty-week">
+                        <i class="fas fa-calendar-week"></i>
+                        <h3>На эту неделю событий нет</h3>
+                        <p>Создайте первое событие, нажав кнопку "Добавить" выше</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // Улучшаем отображение коротких событий
+        setTimeout(() => eventDisplayManager.enhanceEventDisplay(), 0);
+    },
+
+// Вспомогательные функции для недели
+    getDayName: (date) => {
+        const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+        return days[date.getDay()];
+    },
+
+    getMonthShort: (date) => {
+        const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        return months[date.getMonth()];
+    },
+
+    getWeekNumber: (date) => {
+        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
     },
     
     // ===== ПРЕДСТАВЛЕНИЕ СПИСКА =====
@@ -1163,6 +1488,7 @@ const viewManager = {
         
         // Настроить автодополнение тегов
         tagManager.setupTagAutocomplete();
+        eventManager.setupDateTimeHandlers();
     },
     
     // ===== ПРЕДСТАВЛЕНИЕ РЕДАКТИРОВАНИЯ =====
@@ -1251,6 +1577,7 @@ const viewManager = {
         
         // Настроить автодополнение тегов
         tagManager.setupTagAutocomplete();
+        eventManager.setupDateTimeHandlers();
     },
     
     // ===== ПРЕДСТАВЛЕНИЕ ПОИСКА =====
@@ -1262,21 +1589,31 @@ const viewManager = {
             <div class="search-view">
                 <div class="view-header">
                     <h2><i class="fas fa-search"></i> Поиск событий</h2>
-                    <p>Найдите события по названию, описанию или тегам</p>
+                    <p>Найдите события по названию или тегам</p>
                 </div>
                 
                 <div class="search-container">
                     <div class="search-input-container">
                         <input type="text" id="searchInput" class="form-control" 
-                               placeholder="Введите поисковый запрос..."
-                               value="${AppState.searchQuery}"
-                               oninput="utils.debounce(() => {
-                                   AppState.searchQuery = document.getElementById('searchInput').value;
-                                   viewManager.performSearch();
-                               }, 300)()">
+                            placeholder="Введите название или тег..."
+                            value="${AppState.searchQuery}"
+                            oninput="utils.debounce(() => {
+                                AppState.searchQuery = document.getElementById('searchInput').value;
+                                viewManager.performSearch();
+                            }, 300)()">
                         <button class="btn btn-primary" onclick="viewManager.performSearch()">
                             <i class="fas fa-search"></i> Найти
                         </button>
+                    </div>
+                    
+                    <div class="search-tags" id="searchTags">
+                        ${AppState.tags.slice(0, 10).map(tag => `
+                            <span class="tag search-tag-filter" 
+                                onclick="tagManager.filterByTag('${tag.name}')"
+                                style="cursor: pointer; background-color: ${tag.color}20; color: ${tag.color};">
+                                ${tag.name} (${tag.count})
+                            </span>
+                        `).join('')}
                     </div>
                 </div>
                 
@@ -1464,23 +1801,14 @@ const eventManager = {
         const endTime = document.getElementById('eventEnd')?.value;
         
         // Валидация
-        if (!title) {
-            alert('Пожалуйста, введите название события');
-            return;
-        }
-        
-        if (!startTime || !endTime) {
-            alert('Пожалуйста, укажите время начала и окончания');
+        const errors = eventManager.validateEvent(title, startTime, endTime);
+        if (errors.length > 0) {
+            modalManager.showAlert('Ошибка валидации', errors.join('\n'));
             return;
         }
         
         const start = new Date(startTime);
         const end = new Date(endTime);
-        
-        if (end <= start) {
-            alert('Время окончания должно быть позже времени начала');
-            return;
-        }
         
         const eventData = {
             title: title,
@@ -1492,7 +1820,7 @@ const eventManager = {
         try {
             await api.createEvent(eventData);
             utils.log('Event created:', eventData);
-            alert('Событие успешно создано');
+            modalManager.showAlert('Успех', 'Событие успешно создано');
             
             // Очистить временные теги
             AppState.tempTags = [];
@@ -1502,34 +1830,24 @@ const eventManager = {
             viewManager.switchView('day');
         } catch (error) {
             utils.error('Failed to create event:', error);
-            alert('Ошибка при создании события: ' + error.message);
+            modalManager.showAlert('Ошибка', 'Ошибка при создании события: ' + error.message);
         }
     },
-    
-    // Обновить событие
+
     updateEvent: async (id) => {
         const title = document.getElementById('eventTitle')?.value.trim();
         const startTime = document.getElementById('eventStart')?.value;
         const endTime = document.getElementById('eventEnd')?.value;
         
         // Валидация
-        if (!title) {
-            alert('Пожалуйста, введите название события');
-            return;
-        }
-        
-        if (!startTime || !endTime) {
-            alert('Пожалуйста, укажите время начала и окончания');
+        const errors = eventManager.validateEvent(title, startTime, endTime);
+        if (errors.length > 0) {
+            modalManager.showAlert('Ошибка валидации', errors.join('\n'));
             return;
         }
         
         const start = new Date(startTime);
         const end = new Date(endTime);
-        
-        if (end <= start) {
-            alert('Время окончания должно быть позже времени начала');
-            return;
-        }
         
         const eventData = {
             title: title,
@@ -1541,7 +1859,7 @@ const eventManager = {
         try {
             await api.updateEvent(id, eventData);
             utils.log('Event updated:', id, eventData);
-            alert('Событие успешно обновлено');
+            modalManager.showAlert('Успех', 'Событие успешно обновлено');
             
             // Очистить временные теги
             AppState.tempTags = [];
@@ -1552,9 +1870,239 @@ const eventManager = {
             viewManager.switchView('list');
         } catch (error) {
             utils.error('Failed to update event:', error);
-            alert('Ошибка при обновлении события: ' + error.message);
+            modalManager.showAlert('Ошибка', 'Ошибка при обновлении события: ' + error.message);
         }
-    }
+    },
+
+    // Расширенная валидация события
+    validateEvent: (title, startTime, endTime) => {
+        const errors = [];
+        
+        if (!title || title.trim().length === 0) {
+            errors.push('Название события обязательно');
+        }
+        
+        if (!startTime) {
+            errors.push('Время начала обязательно');
+        }
+        
+        if (!endTime) {
+            errors.push('Время окончания обязательно');
+        }
+        
+        if (startTime && endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            
+            if (end <= start) {
+                errors.push('Время окончания должно быть позже времени начала');
+            }
+            
+            if ((end - start) > (24 * 60 * 60 * 1000)) {
+                errors.push('Событие не может длиться более 24 часов');
+            }
+        }
+        
+        if (title && title.trim().length > 100) {
+            errors.push('Название не должно превышать 100 символов');
+        }
+        
+        return errors;
+    },
+
+    // Показать детали события
+    showEventDetails: async (id, clickEvent) => {
+        if (clickEvent) {
+            clickEvent.stopPropagation();
+        }
+        
+        // Закрываем все открытые окна деталей
+        document.querySelectorAll('.event-details-modal').forEach(modal => modal.remove());
+        
+        const event = AppState.events.find(e => e.id === id);
+        if (!event) return;
+        
+        const startTime = new Date(event.startTime);
+        const endTime = new Date(event.endTime);
+        const duration = (endTime - startTime) / (1000 * 60 * 60);
+        
+        // Создаем модальное окно
+        const modal = document.createElement('div');
+        modal.className = 'event-details-modal';
+        
+        // Рассчитываем позицию
+        let top = 0;
+        let left = 0;
+        let transform = '';
+        
+        if (clickEvent) {
+            const modalWidth = 350;
+            const modalHeight = 400;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Позиционируем относительно клика
+            top = clickEvent.clientY;
+            left = clickEvent.clientX;
+            
+            // Проверяем, не выходит ли окно за правый край
+            if (left + modalWidth > viewportWidth) {
+                left = viewportWidth - modalWidth - 10;
+            }
+            
+            // Проверяем, не выходит ли окно за нижний край
+            if (top + modalHeight > viewportHeight) {
+                top = viewportHeight - modalHeight - 10;
+                transform = 'translate(-50%, 0)';
+            } else if (top - modalHeight < 0) {
+                // Если не помещается сверху, показываем снизу
+                top = clickEvent.clientY + 20;
+                transform = 'translate(-50%, 0)';
+            } else {
+                // Показываем сверху от точки клика
+                transform = 'translate(-50%, -100%)';
+            }
+        } else {
+            // Центрируем окно
+            top = '50%';
+            left = '50%';
+            transform = 'translate(-50%, -50%)';
+        }
+        
+        modal.style.cssText = `
+            position: fixed;
+            top: ${typeof top === 'number' ? top + 'px' : top};
+            left: ${typeof left === 'number' ? left + 'px' : left};
+            transform: ${transform};
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1001;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+        `;
+        
+        modal.innerHTML = `
+            <div class="event-details-header">
+                <h3>${event.title}</h3>
+                <button class="close-btn" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="event-details-content">
+                <div class="detail-item">
+                    <i class="far fa-clock"></i>
+                    <div>
+                        <strong>Время:</strong>
+                        <div>${utils.formatDateTime(startTime)} - ${utils.formatTime(endTime)}</div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <i class="far fa-hourglass"></i>
+                    <div>
+                        <strong>Продолжительность:</strong>
+                        <div>${duration >= 1 ? 
+                            `${Math.floor(duration)} ч ${Math.round((duration % 1) * 60)} мин` : 
+                            `${Math.round(duration * 60)} мин`}
+                        </div>
+                    </div>
+                </div>
+                
+                ${event.tags && event.tags.length > 0 ? `
+                    <div class="detail-item">
+                        <i class="fas fa-tags"></i>
+                        <div>
+                            <strong>Теги:</strong>
+                            <div class="event-tags">
+                                ${event.tags.map(tag => `
+                                    <span class="tag" style="background-color: ${stateManager.getTagColor(tag)}20; color: ${stateManager.getTagColor(tag)};">
+                                        ${tag}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="detail-item">
+                    <i class="far fa-calendar"></i>
+                    <div>
+                        <strong>Создано:</strong>
+                        <div>${new Date(event.createdAt).toLocaleString('ru-RU')}</div>
+                    </div>
+                </div>
+                
+                ${event.updatedAt !== event.createdAt ? `
+                    <div class="detail-item">
+                        <i class="fas fa-edit"></i>
+                        <div>
+                            <strong>Обновлено:</strong>
+                            <div>${new Date(event.updatedAt).toLocaleString('ru-RU')}</div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="event-details-actions">
+                <button class="btn btn-outline" onclick="eventManager.editEvent('${event.id}'); this.parentElement.parentElement.remove()">
+                    <i class="fas fa-edit"></i> Редактировать
+                </button>
+                <button class="btn btn-danger" onclick="eventManager.deleteEvent('${event.id}'); this.parentElement.parentElement.remove()">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+            </div>
+        `;
+        
+        // Добавляем в документ
+        document.body.appendChild(modal);
+        
+        // Закрытие при клике вне окна
+        const closeOnClickOutside = (e) => {
+            if (!modal.contains(e.target)) {
+                modal.remove();
+                document.removeEventListener('click', closeOnClickOutside);
+            }
+        };
+        
+        setTimeout(() => {
+            document.addEventListener('click', closeOnClickOutside);
+        }, 100);
+        
+        // Закрытие при нажатии ESC
+        const closeOnEsc = (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', closeOnEsc);
+            }
+        };
+        
+        document.addEventListener('keydown', closeOnEsc);
+        
+        // Убираем обработчики при удалении модального окна
+        modal.addEventListener('remove', () => {
+            document.removeEventListener('click', closeOnClickOutside);
+            document.removeEventListener('keydown', closeOnEsc);
+        });
+    },
+
+    // Автоматическое обновление времени окончания
+    setupDateTimeHandlers: () => {
+        const startInput = document.getElementById('eventStart');
+        const endInput = document.getElementById('eventEnd');
+        
+        if (startInput && endInput) {
+            startInput.addEventListener('change', () => {
+                if (startInput.value) {
+                    const startTime = new Date(startInput.value);
+                    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // +1 час
+                    endInput.value = utils.formatDateTimeLocal(endTime);
+                }
+            });
+        }
+    },
 };
 
 // ================== УПРАВЛЕНИЕ ТЕГАМИ ==================
@@ -1700,7 +2248,7 @@ const modalManager = {
         }
     },
     
-    showAlert: (title, message) => {
+    showAlert: (title, message, type = 'info') => {
         const alertModal = document.getElementById('alertModal');
         const alertTitle = document.getElementById('alertTitle');
         const alertMessage = document.getElementById('alertMessage');
@@ -1708,6 +2256,15 @@ const modalManager = {
         if (alertModal && alertTitle && alertMessage) {
             alertTitle.textContent = title;
             alertMessage.textContent = message;
+            
+            // Добавляем класс в зависимости от типа
+            alertModal.className = 'modal active';
+            if (type === 'error') {
+                alertTitle.style.color = '#d32f2f';
+            } else if (type === 'success') {
+                alertTitle.style.color = '#388e3c';
+            }
+            
             alertModal.classList.add('active');
         }
     },
@@ -1817,6 +2374,50 @@ const app = {
     showError: (message) => {
         utils.error(message);
         alert(`Ошибка: ${message}`);
+    }
+};
+
+const eventDisplayManager = {
+    // Улучшить отображение событий после рендеринга
+    enhanceEventDisplay: () => {
+        // Для дневного представления
+        document.querySelectorAll('.event-block').forEach(eventBlock => {
+            const height = parseInt(eventBlock.style.height);
+            if (height < 25) {
+                eventBlock.classList.add('short-event');
+                
+                // Для очень коротких событий меняем способ отображения
+                if (height < 15) {
+                    const title = eventBlock.querySelector('.event-title');
+                    if (title) {
+                        // Сокращаем текст для очень коротких событий
+                        const originalText = title.textContent;
+                        if (originalText.length > 10) {
+                            title.textContent = originalText.substring(0, 8) + '...';
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Для недельного представления
+        document.querySelectorAll('.week-event').forEach(weekEvent => {
+            const height = parseInt(weekEvent.style.height);
+            if (height < 20) {
+                weekEvent.classList.add('short-event');
+                
+                // Для очень коротких событий в неделе
+                if (height < 15) {
+                    const title = weekEvent.querySelector('.week-event-title');
+                    if (title) {
+                        const originalText = title.textContent;
+                        if (originalText.length > 8) {
+                            title.textContent = originalText.substring(0, 6) + '...';
+                        }
+                    }
+                }
+            }
+        });
     }
 };
 

@@ -719,3 +719,824 @@
         align-items: stretch;
     }
 }
+
+/* ===== ПРЕДСТАВЛЕНИЕ НЕДЕЛИ ===== */
+.week-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.week-header {
+    margin-bottom: 1.5rem;
+}
+
+.week-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.week-days-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.day-header {
+    padding: 1rem;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+    background-color: #fafafa;
+}
+
+.day-header.today {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    font-weight: 600;
+}
+
+.day-header:last-child {
+    border-right: none;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.day-date {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.day-month {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.week-hours {
+    flex: 1;
+    display: flex;
+    overflow-y: auto;
+}
+
+.time-column {
+    width: 80px;
+    background-color: #fafafa;
+    border-right: 1px solid #e0e0e0;
+}
+
+.hour-label {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #eee;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.hour-label:last-child {
+    border-bottom: none;
+}
+
+.day-column {
+    flex: 1;
+    border-right: 1px solid #e0e0e0;
+    position: relative;
+}
+
+.day-column:last-child {
+    border-right: none;
+}
+
+.hour-cell {
+    height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.hour-cell:last-child {
+    border-bottom: none;
+}
+
+.week-event {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-top: 2px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1;
+}
+
+.week-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.week-event-title {
+    font-weight: 600;
+    color: #1976d2;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.week-event-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.empty-week {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #999;
+    margin-top: 2rem;
+}
+
+.empty-week i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* ===== ВСПЛЫВАЮЩЕЕ ОКНО ДЕТАЛЕЙ СОБЫТИЯ ===== */
+.event-details-modal {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -100%); }
+    to { opacity: 1; transform: translate(-50%, -120%); }
+}
+
+.event-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.event-details-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+    flex: 1;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.event-details-content {
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+}
+
+.detail-item i {
+    color: #666;
+    width: 16px;
+    margin-top: 2px;
+}
+
+.detail-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #444;
+}
+
+.event-details-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.event-details-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* ===== УЛУЧШЕНИЯ ДЛЯ ДНЕВНОГО ПРОСМОТРА ===== */
+.day-timeline {
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+.time-slot {
+    min-height: 50px; /* Уменьшаем высоту для 24 часов */
+}
+
+.time-label {
+    width: 70px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.event-block {
+    margin: 1px;
+    padding: 0.5rem;
+}
+
+.event-block .event-title {
+    font-size: 0.85rem;
+}
+
+.event-block .event-time {
+    font-size: 0.75rem;
+}
+
+/* ===== АДАПТИВНОСТЬ НЕДЕЛИ ===== */
+@media (max-width: 1200px) {
+    .week-days-header {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+    
+    .time-column {
+        width: 60px;
+    }
+    
+    .day-header {
+        padding: 0.5rem;
+    }
+    
+    .day-date {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .week-view {
+        overflow-x: auto;
+    }
+    
+    .week-grid {
+        min-width: 800px;
+    }
+}
+
+/* ===== СТИЛИ ДЛЯ ПОИСКА ПО ТЕГАМ ===== */
+.search-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.search-tag-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #f5f5f5;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.search-tag-filter .remove-tag {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.search-tag-filter .remove-tag:hover {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+/* Улучшения для позиционирования модальных окон */
+.event-details-modal {
+    animation: slideIn 0.2s ease;
+    border: 1px solid #e0e0e0;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translate(-50%, -90%); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, -100%); 
+    }
+}
+
+/* Стили для кликабельных дней в неделе */
+.day-header[style*="cursor: pointer"]:hover {
+    background-color: #e3f2fd !important;
+}
+
+/* Улучшения для временной шкалы */
+.time-slot {
+    position: relative;
+}
+
+.time-content {
+    position: relative;
+    min-height: 48px;
+}
+
+.event-block {
+    position: absolute;
+    z-index: 1;
+    width: calc(100% - 4px);
+}
+
+.event-block:hover {
+    z-index: 2;
+}
+
+/* Адаптивность для модальных окон */
+@media (max-width: 768px) {
+    .event-details-modal {
+        width: 90vw !important;
+        max-width: 90vw !important;
+        left: 5vw !important;
+        transform: none !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
+}
+
+/* ===== ДНЕВНОЕ ПРЕДСТАВЛЕНИЕ ===== */
+.event-block {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 4px;
+    padding: 4px 8px; /* Уменьшаем отступы */
+    margin: 1px 0;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-height: 0;
+    z-index: 1;
+}
+
+.event-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+}
+
+.event-title {
+    font-weight: 600;
+    color: #1976d2;
+    margin-bottom: 2px; /* Уменьшаем отступ */
+    font-size: 0.85rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 3px;
+}
+
+.event-block .tag {
+    background-color: rgba(25, 118, 210, 0.1);
+    color: #1976d2;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
+
+/* Для очень коротких событий */
+.event-block.short-event {
+    padding: 2px 4px;
+}
+
+.event-block.short-event .event-title {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 1;
+}
+
+.event-block.short-event .event-time {
+    font-size: 0.7rem;
+}
+
+/* ===== НЕДЕЛЬНОЕ ПРЕДСТАВЛЕНИЕ ===== */
+.week-event {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    background-color: #e3f2fd;
+    border-left: 3px solid #2196f3;
+    border-radius: 3px;
+    padding: 3px 6px;
+    margin-top: 1px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-height: 0;
+    z-index: 1;
+}
+
+.week-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+}
+
+.week-event-title {
+    font-weight: 600;
+    color: #1976d2;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 1px;
+}
+
+.week-event-time {
+    font-size: 0.7rem;
+    color: #666;
+    line-height: 1.2;
+}
+
+/* Для очень коротких событий в неделе */
+.week-event.short-event {
+    padding: 1px 3px;
+}
+
+.week-event.short-event .week-event-title {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+}
+
+.week-event.short-event .week-event-time {
+    font-size: 0.65rem;
+}
+
+/* ===== УЛУЧШЕНИЯ ДЛЯ ВРЕМЕННОЙ ШКАЛЫ ===== */
+.time-content {
+    position: relative;
+    min-height: 60px; /* 1 час = 60px */
+}
+
+.time-slot {
+    min-height: 60px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Стили для часовых отметок в ночное время */
+.time-slot.night-hour .time-label {
+    background-color: #f8f9fa;
+    color: #999;
+}
+
+.time-slot.night-hour {
+    background-color: #fafafa;
+}
+
+/* Подсветка текущего часа */
+.time-slot.current-hour {
+    background-color: #fff8e1;
+}
+
+.time-slot.current-hour .time-label {
+    background-color: #ffecb3;
+    font-weight: 600;
+    color: #ff6f00;
+}
+
+/* ===== ПОДДЕРЖКА КОРОТКИХ СОБЫТИЙ ===== */
+/* Автоматически применяем класс short-event для событий короче 30 минут */
+.event-block[style*="height: 5px"],
+.event-block[style*="height: 10px"],
+.event-block[style*="height: 15px"],
+.event-block[style*="height: 20px"],
+.event-block[style*="height: 25px"] {
+    padding: 1px 4px !important;
+}
+
+.event-block[style*="height: 5px"] .event-title,
+.event-block[style*="height: 10px"] .event-title,
+.event-block[style*="height: 15px"] .event-title,
+.event-block[style*="height: 20px"] .event-title,
+.event-block[style*="height: 25px"] .event-title {
+    font-size: 0.75rem !important;
+    -webkit-line-clamp: 1 !important;
+}
+
+.event-block[style*="height: 5px"] .event-time,
+.event-block[style*="height: 10px"] .event-time,
+.event-block[style*="height: 15px"] .event-time,
+.event-block[style*="height: 20px"] .event-time,
+.event-block[style*="height: 25px"] .event-time {
+    font-size: 0.65rem !important;
+    display: none; /* Скрываем время для очень коротких событий */
+}
+
+.event-block[style*="height: 5px"] .event-tags,
+.event-block[style*="height: 10px"] .event-tags,
+.event-block[style*="height: 15px"] .event-tags,
+.event-block[style*="height: 20px"] .event-tags,
+.event-block[style*="height: 25px"] .event-tags {
+    display: none; /* Скрываем теги для очень коротких событий */
+}
+
+/* ===== НОВЫЕ СТИЛИ ДЛЯ ИСПРАВЛЕНИЯ ПОЗИЦИОНИРОВАНИЯ ===== */
+
+/* Дневное представление - абсолютное позиционирование событий */
+.day-timeline {
+    position: relative;
+    height: 1440px; /* 24 часа * 60px */
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.time-slot {
+    position: relative;
+    height: 60px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+}
+
+.time-slot:last-child {
+    border-bottom: none;
+}
+
+.time-label {
+    width: 80px;
+    padding: 0.5rem;
+    background-color: #f5f5f5;
+    border-right: 1px solid #e0e0e0;
+    font-weight: 500;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+.time-content {
+    flex: 1;
+    position: relative;
+}
+
+/* Слой для событий поверх временной сетки */
+.events-overlay {
+    position: absolute;
+    top: 0;
+    left: 80px; /* Отступ для меток времени */
+    right: 0;
+    bottom: 0;
+    pointer-events: none; /* Пропускаем события мыши к сетке */
+}
+
+.events-overlay .event-block {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    pointer-events: auto; /* Включаем события мыши для блоков событий */
+}
+
+/* Недельное представление - абсолютное позиционирование событий */
+.week-hours {
+    flex: 1;
+    display: flex;
+    overflow-y: auto;
+    position: relative;
+    height: 1200px; /* 24 часа * 50px */
+}
+
+.day-column {
+    flex: 1;
+    border-right: 1px solid #e0e0e0;
+    position: relative;
+}
+
+.day-column:last-child {
+    border-right: none;
+}
+
+.hour-cell {
+    height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hour-cell:last-child {
+    border-bottom: none;
+}
+
+/* Слой для событий в недельном представлении */
+.day-events-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.day-events-overlay .week-event {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    pointer-events: auto;
+}
+
+/* Улучшенные стили для блоков событий */
+.event-block, .week-event {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.event-block:hover, .week-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+    background-color: #d1e9ff;
+}
+
+.event-title, .week-event-title {
+    font-weight: 600;
+    color: #1976d2;
+    margin-bottom: 2px;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.event-time, .week-event-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 3px;
+}
+
+.event-block .tag, .week-event .tag {
+    background-color: rgba(25, 118, 210, 0.1);
+    color: #1976d2;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
+
+/* Короткие события */
+.event-block.short-event, .week-event.short-event {
+    padding: 2px 4px;
+}
+
+.event-block.short-event .event-title,
+.week-event.short-event .week-event-title {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 1;
+}
+
+.event-block.short-event .event-time,
+.week-event.short-event .week-event-time {
+    font-size: 0.7rem;
+}
+
+/* Очень короткие события (точки) */
+.event-block.very-short-event,
+.week-event.very-short-event {
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 50% !important;
+}
+
+.event-block.very-short-event .event-title,
+.week-event.very-short-event .week-event-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.event-block.very-short-event:hover,
+.week-event.very-short-event:hover {
+    background-color: rgba(33, 150, 243, 0.1) !important;
+    transform: scale(1.2) !important;
+}
+
+.event-block.very-short-event i.fa-circle,
+.week-event.very-short-event i.fa-circle {
+    font-size: 8px !important;
+    color: #2196f3 !important;
+}
+
+.event-block.very-short-event:hover i.fa-circle,
+.week-event.very-short-event:hover i.fa-circle {
+    color: #1976d2 !important;
+    font-size: 10px !important;
+}
+
+/* Ночные часы и текущий час */
+.time-slot.night-hour {
+    background-color: #f8f9fa;
+}
+
+.time-slot.night-hour .time-label {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+.time-slot.current-hour {
+    background-color: #fff8e1;
+}
+
+.time-slot.current-hour .time-label {
+    background-color: #ffecb3;
+    color: #ff6f00;
+    font-weight: 600;
+}

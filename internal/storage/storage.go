@@ -141,19 +141,60 @@ func (s *Storage) Delete(id string) error {
 	return s.save()
 }
 
-// Search ищет события по ключевым словам в заголовке
+// Search ищет события по ключевым словам в заголовке и тегах
 func (s *Storage) Search(query string) ([]*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	if query == "" {
+		return s.getAllEvents(), nil
+	}
+
+	query = strings.ToLower(strings.TrimSpace(query))
 	var results []*models.Event
+
 	for _, event := range s.events {
+		// Поиск в заголовке
 		if containsIgnoreCase(event.Title, query) {
 			results = append(results, event)
+			continue
+		}
+
+		// Поиск в тегах
+		for _, tag := range event.Tags {
+			if containsIgnoreCase(tag, query) {
+				results = append(results, event)
+				break
+			}
 		}
 	}
 
-	return results, nil
+	// Удаляем дубликаты
+	return removeDuplicates(results), nil
+}
+
+// Вспомогательная функция для удаления дубликатов
+func removeDuplicates(events []*models.Event) []*models.Event {
+	seen := make(map[string]bool)
+	result := make([]*models.Event, 0, len(events))
+
+	for _, event := range events {
+		if !seen[event.ID] {
+			seen[event.ID] = true
+			result = append(result, event)
+		}
+	}
+
+	return result
+}
+
+// Получить все события (вспомогательная функция)
+func (s *Storage) getAllEvents() []*models.Event {
+	events := make([]*models.Event, 0, len(s.events))
+	for _, event := range s.events {
+		events = append(events, event)
+	}
+	return events
 }
 
 // load загружает данные из файла
